@@ -15,7 +15,7 @@ import argparse
 import numpy as np
 import torch.utils.data
 
-import hico_config
+from . import hico_config
 
 
 class HICO(torch.utils.data.Dataset):
@@ -25,6 +25,7 @@ class HICO(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         sequence_id = self.sequence_ids[index]
+
         data = pickle.load(open(os.path.join(self.root, '{}.p'.format(sequence_id)), 'rb'))
         # edge_features = data['edge_features']
         # node_features = data['node_features']

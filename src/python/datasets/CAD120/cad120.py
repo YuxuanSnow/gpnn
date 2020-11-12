@@ -15,8 +15,8 @@ import argparse
 import numpy as np
 import torch.utils.data
 
-import cad120_config
-import metadata
+from . import cad120_config
+from . import metadata
 
 
 class CAD120(torch.utils.data.Dataset):

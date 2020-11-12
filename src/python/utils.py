@@ -21,6 +21,8 @@ import cv2
 
 import datasets
 import visualization_utils
+
+from datasets.utils import collate_fn_hico as collate_fn_hico_backup
 # import vsrl_eval
 # import vsrl_utils as vu
 
@@ -189,13 +191,15 @@ def get_hico_data(args):
     valid_set = datasets.HICO(root, val_filenames[:])
     testing_set = datasets.HICO(root, test_filenames[:])
 
-    train_loader = torch.utils.data.DataLoader(training_set, collate_fn=datasets.utils.collate_fn_hico,
+    train_loader = torch.utils.data.DataLoader(training_set, collate_fn=datasets.utils.collate_fn_hico_backup,
                                                batch_size=args.batch_size, shuffle=True,
                                                num_workers=args.prefetch, pin_memory=True)
-    valid_loader = torch.utils.data.DataLoader(valid_set, collate_fn=datasets.utils.collate_fn_hico,
+
+    valid_loader = torch.utils.data.DataLoader(valid_set, collate_fn=datasets.utils.collate_fn_hico_backup,
                                                batch_size=args.batch_size,
                                                num_workers=args.prefetch, pin_memory=True)
-    test_loader = torch.utils.data.DataLoader(testing_set, collate_fn=datasets.utils.collate_fn_hico,
+
+    test_loader = torch.utils.data.DataLoader(testing_set, collate_fn=datasets.utils.collate_fn_hico_backup,
                                                batch_size=args.batch_size,
                                                num_workers=args.prefetch, pin_memory=True)
     print('Dataset sizes: {} training, {} validation, {} testing.'.format(len(train_loader), len(valid_loader), len(test_loader)))

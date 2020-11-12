@@ -20,7 +20,7 @@ class Paths(object):
             data_root: The root folder of all the recorded data of events
             metadata_root: The root folder where the processed information (Skeleton and object features) is stored.
         """
-        self.project_root = '/home/siyuan/projects/release/gpnn/'
+        self.project_root = '/home/yuxuan/gpnn/'
         self.tmp_root = os.path.join(self.project_root, 'tmp')
         self.log_root = os.path.join(self.project_root, 'log')
 
