@@ -16,10 +16,13 @@ import hico_config
 
 
 def collect_hoi_stats(bbox):
+    # stats is an counter for all 600 hoi action classes
     stats = np.zeros(600)
     for idx in range(bbox['filename'].shape[1]):
+        # iterate over all images, idx between 0 and 38118
         for i_hoi in range(bbox['hoi'][0, idx]['id'].shape[1]):
             hoi_id = bbox['hoi'][0, idx]['id'][0, i_hoi][0, 0]
+            # if the hoi id appears onece, counter += 1
             stats[int(hoi_id)-1] += 1
 
     return stats
@@ -30,8 +33,12 @@ def split_testing_set(paths, bbox, stats):
 
     rare_set = list()
     non_rare_set = list()
+
+    # iterate over all images
     for idx in range(bbox['filename'].shape[1]):
+        # read file name
         filename = str(bbox['filename'][0, idx][0])
+        # remove .jpg, only keeps name
         filename = os.path.splitext(filename)[0] + '\n'
 
         try:
@@ -43,6 +50,7 @@ def split_testing_set(paths, bbox, stats):
         for i_hoi in range(bbox['hoi'][0, idx]['id'].shape[1]):
             hoi_id = bbox['hoi'][0, idx]['id'][0, i_hoi][0, 0]
 
+            # if this hoi class appears less than 10 times then it is rare
             if stats[int(hoi_id)-1] < 10:
                 rare_set.append(filename)
                 rare = True
@@ -63,7 +71,11 @@ def find_rare_hoi(paths):
     bbox_test = anno_bbox['bbox_test']
     list_action = anno_bbox['list_action']
 
+    # stats is an array with length = 600 (all hoi class), element is appearence of class
     stats = collect_hoi_stats(bbox_train)
+    # if hoi class appears less than 10 time, it is rare
+    # split the train test into rare and non rare hoi
+    # save the filenames into /home/yuxuan/gpnn/tmp/hico/test_rare.txt
     split_testing_set(paths, bbox_test, stats)
 
 

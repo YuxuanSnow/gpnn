@@ -95,7 +95,7 @@ def extract_features(paths):
     if not os.path.exists(feature_path):
         os.makedirs(feature_path)
     
-    image_list = list()
+    image_list = list()     #If no argument is given, the constructor creates a new empty list.
     with open(image_list_file) as f:
         for line in f.readlines():
             image_list.append(line.strip())

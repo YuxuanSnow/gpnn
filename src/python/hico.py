@@ -109,7 +109,7 @@ def main(args):
     logger = logutil.Logger(os.path.join(args.log_root, timestamp))
 
     # Load data
-    training_set, valid_set, testing_set, train_loader, valid_loader, test_loader, img_index = utils.get_hico_data(args)
+    training_set, valid_set, testing_set, train_loader, valid_loader, test_loader, img_index = utils.get_hico_data(args) #load the data with given batch size
 
     # Get data size and define model
     edge_features, node_features, adj_mat, node_labels, sequence_id, det_classes, det_boxes, human_num, obj_num = training_set[0]
@@ -117,7 +117,7 @@ def main(args):
     edge_feature_size, node_feature_size = edge_features.shape[2], node_features.shape[1]
     message_size = int(edge_feature_size/2)*2
     model_args = {'model_path': args.resume, 'edge_feature_size': edge_feature_size, 'node_feature_size': node_feature_size, 'message_size': message_size, 'link_hidden_size': 512, 'link_hidden_layers': 2, 'link_relu': False, 'update_hidden_layers': 1, 'update_dropout': False, 'update_bias': True, 'propagate_layers': 3, 'hoi_classes': action_class_num, 'resize_feature_to_message_size': False}
-    model = models.GPNN_HICO(model_args)
+    model = models.GPNN_HICO(model_args) # construct GPNN structure for hico dataset
     del edge_features, node_features, adj_mat, node_labels
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     mse_loss = torch.nn.MSELoss(size_average=True)
@@ -364,7 +364,7 @@ def gen_test_result(args, test_loader, model, mse_loss, multi_label_loss, img_in
 
     for obj_idx, save_info in filtered_hoi.items():
         obj_start, obj_end = metadata.obj_hoi_index[obj_idx]
-        obj_arr = np.empty((obj_end - obj_start + 1, len(img_index)), dtype=np.object)
+        obj_arr = np.empty((obj_end - obj_start + 1, len(img_index)), dtype=np.object) #np.empyt(Shape of the empty array)
         for row in range(obj_arr.shape[0]):
             for col in range(obj_arr.shape[1]):
                 obj_arr[row][col] = []
@@ -377,7 +377,7 @@ def gen_test_result(args, test_loader, model, mse_loss, multi_label_loss, img_in
                     obj_arr[row_idx][col_idx] = np.vstack((obj_arr[row_idx][col_idx], bbox_concat))
                 else:
                     obj_arr[row_idx][col_idx] = bbox_concat
-        sio.savemat(os.path.join(args.tmp_root, 'results', 'HICO', 'detections_' + str(obj_idx).zfill(2) + '.mat'), {'all_boxes': obj_arr})
+        sio.savemat(os.path.join(args.tmp_root, 'results', 'HICO', 'detections_' + str(obj_idx).zfill(2) + '.mat'), {'all_boxes': obj_arr}) #save .mat file, which contains position of boxes
         print('finished saving for ' + str(obj_idx))
 
     return

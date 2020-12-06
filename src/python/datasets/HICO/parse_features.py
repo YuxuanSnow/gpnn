@@ -155,13 +155,15 @@ def read_features(data_root, tmp_root, bbox, list_action):
         np.save(os.path.join(save_data_path, '{}_node_features'.format(filename)), node_features)
         pickle.dump(instance, open(os.path.join(save_data_path, '{}.p'.format(filename)), 'wb'))
 
+
+''' repitition of last function red_features
 def read_features_(data_root, tmp_root, bbox, list_action):
     # roi_size = 49  # Deformable ConvNet
     # roi_size = 512 * 49  # VGG conv feature
     roi_size = 1000  # VGG fully connected feature
     feature_size = 49
     feature_type = 'resnet'
-    action_class_num = len(metadata.action_classes)
+    action_class_num = len(metadata.action_classes) 
     # feature_path = os.path.join(data_root, 'processed', 'features_background_49')
     save_data_path = os.path.join(data_root, 'processed', 'hico_data_background_49')
     det_feature_path = os.path.join(data_root, 'processed', 'features_background_49')
@@ -260,9 +262,10 @@ def read_features_(data_root, tmp_root, bbox, list_action):
         np.save(os.path.join(save_data_path, '{}_edge_features'.format(img_name)), edge_features)
         np.save(os.path.join(save_data_path, '{}_node_features'.format(img_name)), node_features)
         pickle.dump(instance, open(os.path.join(save_data_path, '{}.p'.format(img_name)), 'wb'))
-
+'''
 
 def collect_data(paths):
+    # read information from hico dataset
     anno_bbox = scipy.io.loadmat(os.path.join(paths.data_root, 'anno_bbox.mat'))
     bbox_train = anno_bbox['bbox_train']
     bbox_test = anno_bbox['bbox_test']

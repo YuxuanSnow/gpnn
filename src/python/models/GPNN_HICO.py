@@ -22,7 +22,7 @@ class GPNN_HICO(torch.nn.Module):
 
         self.model_args = model_args.copy()
         if model_args['resize_feature_to_message_size']:
-            # Resize large features
+            # Resize large features into message size with Linear functions and xavier normalization
             self.edge_feature_resize = torch.nn.Linear(model_args['edge_feature_size'], model_args['message_size'])
             self.node_feature_resize = torch.nn.Linear(model_args['node_feature_size'], model_args['message_size'])
             torch.nn.init.xavier_normal(self.edge_feature_resize.weight)
@@ -31,9 +31,9 @@ class GPNN_HICO(torch.nn.Module):
             model_args['edge_feature_size'] = model_args['message_size']
             model_args['node_feature_size'] = model_args['message_size']
 
-        self.link_fun = units.LinkFunction('GraphConv', model_args)
+        self.link_fun = units.LinkFunction('GraphConv', model_args) # if needs temporal operation, then 'GraphConvLSTM'
         self.sigmoid = torch.nn.Sigmoid()
-        self.message_fun = units.MessageFunction('linear_concat_relu', model_args)
+        self.message_fun = units.MessageFunction('linear_concat_relu', model_args) # concatenate messages from all neghbor nodes
         self.update_fun = units.UpdateFunction('gru', model_args)
         self.readout_fun = units.ReadoutFunction('fc', {'readout_input_size': model_args['node_feature_size'], 'output_classes': model_args['hoi_classes']})
 
@@ -53,7 +53,7 @@ class GPNN_HICO(torch.nn.Module):
         # pred_node_labels = torch.autograd.Variable(torch.zeros(node_labels.size()))
         # if args.cuda:
         #     pred_node_labels = pred_node_labels.cuda()
-        pred_adj_mat = torch.autograd.Variable(torch.zeros(adj_mat.size()))
+        pred_adj_mat = torch.autograd.Variable(torch.zeros(adj_mat.size()))         #automatic differentiation of arbitrary scalar valued functions
         pred_node_labels = torch.autograd.Variable(torch.zeros(node_labels.size()))
         if args.cuda:
             pred_node_labels = pred_node_labels.cuda()
@@ -95,7 +95,7 @@ class GPNN_HICO(torch.nn.Module):
         # Belief propagation
 
         for batch_idx in range(node_features.size()[0]):
-            valid_node_num = human_nums[batch_idx] + obj_nums[batch_idx]
+            valid_node_num = human_nums[batch_idx] + obj_nums[batch_idx] # number of all valid nodes in the parse graph
 
             for passing_round in range(self.propagate_layers):
                 # print hidden_edge_states[batch_idx][passing_round].size(), valid_node_num

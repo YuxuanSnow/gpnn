@@ -19,17 +19,18 @@ from . import hico_config
 
 
 class HICO(torch.utils.data.Dataset):
-    def __init__(self, root, sequence_ids):
+    def __init__(self, root, sequence_ids): #self.sequence_ids: train_filenames/evaluate_filenames/test_filenames
         self.root = root
         self.sequence_ids = sequence_ids
 
     def __getitem__(self, index):
-        sequence_id = self.sequence_ids[index]
+        sequence_id = self.sequence_ids[index]  #sequence_id: file name
 
         data = pickle.load(open(os.path.join(self.root, '{}.p'.format(sequence_id)), 'rb'))
         # edge_features = data['edge_features']
         # node_features = data['node_features']
 
+        # xxx.p file is a dictionary, contains "adj_mat", "boxes", "classes", "human_num", "img_name", "node_labels"
         det_classes = data['classes']
         det_boxes = data['boxes']
         human_num = data['human_num']

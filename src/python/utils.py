@@ -10,6 +10,8 @@ Description of the file.
 import os
 import pickle
 import itertools
+import sys
+
 
 import numpy as np
 import torch
@@ -175,9 +177,9 @@ def plot_confusion_matrix(cm, classes, filename=None, normalize=False, title='Co
 def get_hico_data(args):
     np.random.seed(0)
     validation_ratio = 0.25
-    with open(os.path.join(args.tmp_root, 'hico', 'trainval.txt')) as f:
-        filenames = [line.strip() for line in f.readlines()]
-        filenames = np.random.permutation(filenames)
+    with open(os.path.join(args.tmp_root, 'hico', 'trainval.txt')) as f: #root: /home/yuxuan/gpnn/tmp/hico/trainval.txt, contains file name of hico dataset
+        filenames = [line.strip() for line in f.readlines()]             #filenames is array containing filenames of hico dataset
+        filenames = np.random.permutation(filenames)                     #randomly permute filenames in array
         train_filenames = filenames[int(len(filenames)*validation_ratio):]
         val_filenames = filenames[:int(len(filenames)*validation_ratio)]
 
@@ -191,18 +193,20 @@ def get_hico_data(args):
     valid_set = datasets.HICO(root, val_filenames[:])
     testing_set = datasets.HICO(root, test_filenames[:])
 
-    train_loader = torch.utils.data.DataLoader(training_set, collate_fn=datasets.utils.collate_fn_hico_backup,
+    train_loader = torch.utils.data.DataLoader(training_set, collate_fn=datasets.utils.collate_fn_hico,     #torch.utils.data.Dataloader: load data in mini-batch
                                                batch_size=args.batch_size, shuffle=True,
                                                num_workers=args.prefetch, pin_memory=True)
 
-    valid_loader = torch.utils.data.DataLoader(valid_set, collate_fn=datasets.utils.collate_fn_hico_backup,
+    valid_loader = torch.utils.data.DataLoader(valid_set, collate_fn=datasets.utils.collate_fn_hico,
                                                batch_size=args.batch_size,
                                                num_workers=args.prefetch, pin_memory=True)
 
-    test_loader = torch.utils.data.DataLoader(testing_set, collate_fn=datasets.utils.collate_fn_hico_backup,
+    test_loader = torch.utils.data.DataLoader(testing_set, collate_fn=datasets.utils.collate_fn_hico, #datasets.utils.collate_fn_hico_backup
                                                batch_size=args.batch_size,
                                                num_workers=args.prefetch, pin_memory=True)
     print('Dataset sizes: {} training, {} validation, {} testing.'.format(len(train_loader), len(valid_loader), len(test_loader)))
+    #print(len(training_set[0][0][0][0]))
+    #sys.exit("Error message")
     return training_set, valid_set, testing_set, train_loader, valid_loader, test_loader, img_index
 
 
