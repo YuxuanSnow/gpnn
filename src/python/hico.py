@@ -345,38 +345,50 @@ def gen_test_result(args, test_loader, model, mse_loss, multi_label_loss, img_in
 
         pred_adj_mat, pred_node_labels = model(edge_features, node_features, adj_mat, node_labels, human_nums, obj_nums, args)
 
-        for batch_i in range(pred_adj_mat.size()[0]):
+        for batch_i in range(pred_adj_mat.size()[0]): # iterate over pred_adj_mat
             sequence_id = sequence_ids[batch_i]
-            hois_test = get_indices(pred_adj_mat[batch_i], pred_node_labels[batch_i], human_nums[batch_i], obj_nums[batch_i],
+
+            hois_test = get_indices(pred_adj_mat[batch_i], pred_node_labels[batch_i], human_nums[batch_i], obj_nums[batch_i],  # prediction
                         det_classes[batch_i], det_boxes[batch_i])
-            hois_gt = get_indices(adj_mat[batch_i], node_labels[batch_i], human_nums[batch_i],
+            hois_gt = get_indices(adj_mat[batch_i], node_labels[batch_i], human_nums[batch_i],  # ground truth
                                     obj_nums[batch_i],
                                     det_classes[batch_i], det_boxes[batch_i])
+
+            # what's in get_indices: hois.append((h_class, obj_name, a_idx, (bbox_h, bbox_o, rel_idx, score), (np_pred_node_labels[h_idx, a_idx],
+            # np_pred_node_labels[o_idx, a_idx], np_pred_adj_mat[h_idx, o_idx])))
+            # therefore, info should be the (bbox_h, bbox_o, rel_idx, score)
             for hoi in hois_test:
                 _, o_idx, a_idx, info, _ = hoi
-                if o_idx not in filtered_hoi.keys():
+                if o_idx not in filtered_hoi.keys():    # insert the o_index of prediction into dictionary
                     filtered_hoi[o_idx] = dict()
-                if sequence_id not in filtered_hoi[o_idx].keys():
+                if sequence_id not in filtered_hoi[o_idx].keys(): # sequence_id is maybe the id of test image in the dataset
                     filtered_hoi[o_idx][sequence_id] = list()
-                filtered_hoi[o_idx][sequence_id].append(info)
+                filtered_hoi[o_idx][sequence_id].append(info)   # it is such an array which can be queried by object index and image name
 
         print("finished generating result from " + sequence_ids[0] + " to " + sequence_ids[-1])
 
-    for obj_idx, save_info in filtered_hoi.items():
-        obj_start, obj_end = metadata.obj_hoi_index[obj_idx]
-        obj_arr = np.empty((obj_end - obj_start + 1, len(img_index)), dtype=np.object) #np.empyt(Shape of the empty array)
+    # After this for-loop, the dictionary filtered_hoi should be completed
+
+    for obj_idx, save_info in filtered_hoi.items():     # obj_idx is the key, save_info is the value in the dictionary
+        obj_start, obj_end = metadata.obj_hoi_index[obj_idx]        # datasets.HICO.metadata.obj_hoi_index = [(),(),()], totally 80 elements
+        obj_arr = np.empty((obj_end - obj_start + 1, len(img_index)), dtype=np.object) # np.empyt(Shape of the empty array)
+        # what is the object_hoi and what is the object_begin and object_end?
+
+        # row number of .mat file should be obj_end - obj_start + 1
+        # col number of .mat file should be len(img)index), it is an array containing file name from /tmp/hico/img_index.txt, totally 9658 elements
         for row in range(obj_arr.shape[0]):
             for col in range(obj_arr.shape[1]):
                 obj_arr[row][col] = []
         for id, data_info in save_info.items():
             col_idx = img_index.index(id)
             for pair in data_info:
-                row_idx = pair[2]
-                bbox_concat = np.concatenate((pair[0], pair[1], [pair[3]]))
+                row_idx = pair[2]   # basically, pair[2] is rel_index. It is the index in the filtered hoi lists of the object index. It is from 0 to obj_index
+                bbox_concat = np.concatenate((pair[0], pair[1], [pair[3]]))     # bbox should contain the human bb, object bb and a score
                 if len(obj_arr[row_idx][col_idx]) > 0:
                     obj_arr[row_idx][col_idx] = np.vstack((obj_arr[row_idx][col_idx], bbox_concat))
                 else:
                     obj_arr[row_idx][col_idx] = bbox_concat
+
         sio.savemat(os.path.join(args.tmp_root, 'results', 'HICO', 'detections_' + str(obj_idx).zfill(2) + '.mat'), {'all_boxes': obj_arr}) #save .mat file, which contains position of boxes
         print('finished saving for ' + str(obj_idx))
 

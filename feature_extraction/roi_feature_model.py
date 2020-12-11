@@ -19,7 +19,7 @@ import scipy.io as sio
 import matplotlib.pyplot as plt
 
 import metadata
-import config
+#import config
 
 # TODO: Check if needed modification
 def parse_classes(det_classes):

@@ -82,7 +82,10 @@ def get_info(paths, imageset, feature_type):
 
 
 def extract_features(paths, imageset, vcoco_imageset):
+    # choose resnet
     feature_type = 'resnet'
+
+    # size of input images and features are fixed
     input_h, input_w = 244, 244
     feature_size = (7, 7)
     adaptive_max_pool = roi_pooling.AdaptiveMaxPool2d(*feature_size)

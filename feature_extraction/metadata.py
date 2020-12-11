@@ -109,7 +109,7 @@ action_classes = ['adjust', 'assemble', 'block', 'blow', 'board', 'break', 'brus
 
 hoi_to_action = [action_classes.index(c) for c in hoi_classes]
 
-#(object_begin, object_end)
+
 obj_hoi_index = [(0, 0), (161, 170), (11, 24), (66, 76), (147, 160), (1, 10), (55, 65), (187, 194), (568, 576),
                  (32, 46), (563, 567), (326, 330), (503, 506), (415, 418), (244, 247), (25, 31), (77, 86), (112, 129),
                  (130, 146), (175, 186), (97, 107), (314, 325), (236, 239), (596, 600), (343, 348), (209, 214), (577, 584),
@@ -125,11 +125,10 @@ obj_to_hoi = [hoi_classes[x[0] - 1: x[1]] for x in obj_hoi_index]
 obj_actions = [[action_classes.index(y) for y in x] for x in obj_to_hoi]
 
 def action_to_obj_idx(obj_class, action_hico):
-    # rel_idx = metadata.action_to_obj_idx(obj_name, a_idx)
-    action_coco = action_classes[action_hico] # find the action in string
-    obj_interval = obj_hoi_index[obj_class]   # find the obj_hoi
-    hois = hoi_classes[obj_interval[0] - 1 : obj_interval[1]] # build a filtered hoi classes, which  are only possible for the object
-    return hois.index(action_coco)     #return the index of hoi in the filtered hoi classes, which match the true object class
+    action_coco = action_classes[action_hico]
+    obj_interval = obj_hoi_index[obj_class]
+    hois = hoi_classes[obj_interval[0] - 1 : obj_interval[1]]
+    return hois.index(action_coco)
 
 def main():
     pass
