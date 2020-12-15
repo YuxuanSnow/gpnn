@@ -161,6 +161,7 @@ def extract_features(paths):
             roi_image = original_img[roi[1]:roi[3]+1, roi[0]:roi[2]+1, :]
             # plt.imshow(roi_image)
             # plt.show()
+            # resize the roi images to ResNet input size using cv2 interpolation
             roi_image = transform(cv2.resize(roi_image, (input_h, input_w), interpolation=cv2.INTER_LINEAR))
             roi_image = torch.autograd.Variable(roi_image.unsqueeze(0)).cuda()
             feature, _ = feature_network(roi_image)
