@@ -79,6 +79,7 @@ def read_features(data_root, tmp_root, bbox, list_action):
         os.makedirs(save_data_path)
 
     for i_image in range(bbox['filename'].shape[1]):
+        # for each image
         filename = os.path.splitext(bbox['filename'][0, i_image][0])[0]
         #print(filename)
 
@@ -90,29 +91,33 @@ def read_features(data_root, tmp_root, bbox, list_action):
             continue
 
         human_num, obj_num, edge_num = parse_classes(det_classes)
-        node_num = human_num + obj_num
+        node_num = human_num + obj_num      # definition of nodes number and edge number
         assert edge_num == human_num * obj_num
 
         print(human_num)
 
         edge_features = np.zeros((human_num+obj_num, human_num+obj_num, roi_size))
         node_features = np.zeros((node_num, roi_size*2))
-        adj_mat = np.zeros((human_num+obj_num, human_num+obj_num))
+        adj_mat = np.zeros((human_num+obj_num, human_num+obj_num))      # A∈ [0, 1]^{|V|×|V|}, V denotes the node number on the image
         node_labels = np.zeros((node_num, action_class_num))
 
         # Node features
         for i_node in range(node_num):
             # node_features[i_node, :] = np.reshape(det_features[i_node, ...], roi_size)
             if i_node < human_num:
+                # extracted feature descriptor of human
                 node_features[i_node, :roi_size] = np.reshape(det_features[i_node, ...], roi_size) # person or object bounding box feature map only
             else:
+                # extracted feature descriptor of object
                 node_features[i_node, roi_size:] = np.reshape(det_features[i_node, ...], roi_size)
 
         # Edge features
         i_edge = 0
         for i_human in range(human_num):
             for i_obj in range(obj_num):
+                # edge from human to object
                 edge_features[i_human, human_num + i_obj, :] = np.reshape(det_features[node_num + i_edge, ...], roi_size) # person and object bounding box feature
+                # edge from object to human
                 edge_features[human_num + i_obj, i_human, :] = edge_features[i_human, human_num + i_obj, :]
                 i_edge += 1
 

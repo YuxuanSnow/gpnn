@@ -115,7 +115,8 @@ def main(args):
     edge_features, node_features, adj_mat, node_labels, sequence_id, det_classes, det_boxes, human_num, obj_num = training_set[0]
 
     edge_feature_size, node_feature_size = edge_features.shape[2], node_features.shape[1]
-    message_size = int(edge_feature_size/2)*2
+    # why 2 and 1?
+    message_size = int(edge_feature_size/2)*2   # largest evennumber less than edge_feature_size
     model_args = {'model_path': args.resume, 'edge_feature_size': edge_feature_size, 'node_feature_size': node_feature_size, 'message_size': message_size, 'link_hidden_size': 512, 'link_hidden_layers': 2, 'link_relu': False, 'update_hidden_layers': 1, 'update_dropout': False, 'update_bias': True, 'propagate_layers': 3, 'hoi_classes': action_class_num, 'resize_feature_to_message_size': False}
     model = models.GPNN_HICO(model_args) # construct GPNN structure for hico dataset
     del edge_features, node_features, adj_mat, node_labels
@@ -135,11 +136,10 @@ def main(args):
     avg_epoch_error = np.inf
     best_epoch_error = np.inf
 
-
     for epoch in range(args.start_epoch, args.epochs):
         logger.log_value('learning_rate', args.lr).step()
         # train for one epoch
-        train(train_loader, model, mse_loss, multi_label_loss, optimizer, epoch, logger)
+        # train(train_loader, model, mse_loss, multi_label_loss, optimizer, epoch, logger)
         # test on validation set
         epoch_error = validate(valid_loader, model, mse_loss, multi_label_loss, logger)
         epoch_errors.append(epoch_error)
@@ -168,7 +168,7 @@ def main(args):
         args, best_epoch_error, avg_epoch_error, model, optimizer = loaded_checkpoint
 
     # validate(test_loader, model, mse_loss, multi_label_loss, test=True)
-    gen_test_result(args, test_loader, model, mse_loss, multi_label_loss, img_index)
+    # gen_test_result(args, test_loader, model, mse_loss, multi_label_loss, img_index)
 
     print('Time elapsed: {:.2f}s'.format(time.time() - start_time))
 
@@ -203,7 +203,8 @@ def train(train_loader, model, mse_loss, multi_label_loss, optimizer, epoch, log
         if len(det_indices) > 0:
             y_true, y_score = evaluation(det_indices, pred_node_labels, node_labels, y_true, y_score)
 
-        losses.update(loss.data[0], edge_features.size()[0])
+        # change loss.data[0] to this because that was used in pytorch 0.4.1
+        losses.update(loss.data.item(), edge_features.size()[0])
         loss.backward()
         optimizer.step()
 
@@ -256,11 +257,12 @@ def validate(val_loader, model, mse_loss, multi_label_loss, logger=None, test=Fa
         node_labels = utils.to_variable(node_labels, args.cuda)
 
         pred_adj_mat, pred_node_labels = model(edge_features, node_features, adj_mat, node_labels, human_num, obj_num, args)
+
         det_indices, loss = loss_fn(pred_adj_mat, adj_mat, pred_node_labels, node_labels, mse_loss, multi_label_loss, human_num, obj_num)
 
         # Log
         if len(det_indices) > 0:
-            losses.update(loss.data[0], len(det_indices))
+            losses.update(loss.data.item(), len(det_indices))
             y_true, y_score = evaluation(det_indices, pred_node_labels, node_labels, y_true, y_score, test=test)
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -420,7 +422,7 @@ def parse_arguments():
                         help='Input batch size for training (default: 10)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='Enables CUDA training')
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+    parser.add_argument('--epochs', type=int, default=41, metavar='N',
                         help='Number of epochs to train (default: 10)')
     parser.add_argument('--start-epoch', type=int, default=0, metavar='N',
                         help='Index of epoch to start (default: 0)')

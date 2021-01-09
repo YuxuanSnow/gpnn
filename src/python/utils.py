@@ -32,7 +32,7 @@ from datasets.utils import collate_fn_hico as collate_fn_hico_backup
 def to_variable(v, use_cuda):
     if use_cuda:
         v = v.cuda()
-    return torch.autograd.Variable(v)
+    return v# torch.autograd.Variable(v), wrappers variables for tensors. Already deprecated
 
 
 def get_cad_data(args, prediction=False):

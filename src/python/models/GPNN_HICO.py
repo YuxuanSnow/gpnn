@@ -15,6 +15,21 @@ import torch.autograd
 
 import units
 
+# model_args =
+# {'model_path': args.resume,
+# 'edge_feature_size': edge_feature_size,
+# 'node_feature_size': node_feature_size,
+# 'message_size': message_size,
+# 'link_hidden_size': 512,
+# 'link_hidden_layers': 2,
+# 'link_relu': False,
+# 'update_hidden_layers': 1,
+# 'update_dropout': False,
+# 'update_bias': True,
+# 'propagate_layers': 3,
+# 'hoi_classes': action_class_num,
+# 'resize_feature_to_message_size': False}
+
 
 class GPNN_HICO(torch.nn.Module):
     def __init__(self, model_args):
@@ -23,7 +38,7 @@ class GPNN_HICO(torch.nn.Module):
         self.model_args = model_args.copy()
         if model_args['resize_feature_to_message_size']:
             # Resize large features into message size with Linear functions and xavier normalization
-            self.edge_feature_resize = torch.nn.Linear(model_args['edge_feature_size'], model_args['message_size'])
+            self.edge_feature_resize = torch.nn.Linear(model_args['edge_feature_size'], model_args['message_size']) # use linear layer to resize (dont do anything if size already a even number)
             self.node_feature_resize = torch.nn.Linear(model_args['node_feature_size'], model_args['message_size'])
             torch.nn.init.xavier_normal(self.edge_feature_resize.weight)
             torch.nn.init.xavier_normal(self.node_feature_resize.weight)
@@ -45,7 +60,7 @@ class GPNN_HICO(torch.nn.Module):
         if self.model_args['resize_feature_to_message_size']:
             edge_features = self.edge_feature_resize(edge_features)
             node_features = self.node_feature_resize(node_features)
-        edge_features = edge_features.permute(0, 3, 1, 2)
+        edge_features = edge_features.permute(0, 3, 1, 2) # permute the 4 dimension of tensor, don't know why
         node_features = node_features.permute(0, 2, 1)
         hidden_node_states = [[node_features[batch_i, ...].unsqueeze(0).clone() for _ in range(self.propagate_layers+1)] for batch_i in range(node_features.size()[0])]
         hidden_edge_states = [[edge_features[batch_i, ...].unsqueeze(0).clone() for _ in range(self.propagate_layers+1)] for batch_i in range(node_features.size()[0])]
@@ -97,7 +112,7 @@ class GPNN_HICO(torch.nn.Module):
         for batch_idx in range(node_features.size()[0]):
             valid_node_num = human_nums[batch_idx] + obj_nums[batch_idx] # number of all valid nodes in the parse graph
 
-            for passing_round in range(self.propagate_layers):
+            for passing_round in range(self.propagate_layers):      # iterative passing
                 # print hidden_edge_states[batch_idx][passing_round].size(), valid_node_num
                 pred_adj_mat[batch_idx, :valid_node_num, :valid_node_num] = self.link_fun(hidden_edge_states[batch_idx][passing_round][:, :, :valid_node_num, :valid_node_num])
                 #if passing_round == 0:

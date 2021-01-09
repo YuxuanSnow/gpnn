@@ -55,6 +55,7 @@ class LinkFunction(torch.nn.Module):
     def l_graph_conv(self, edge_features):
         last_layer_output = edge_features
         for layer in self.learn_modules:
+            # use initially built neural network
             last_layer_output = layer(last_layer_output)
         return last_layer_output[:, 0, :, :]
 
@@ -62,11 +63,14 @@ class LinkFunction(torch.nn.Module):
         input_size = self.args['edge_feature_size']
         hidden_size = self.args['link_hidden_size']
 
+        # build the neural network initially
         if self.args.get('link_relu', False):
             self.learn_modules.append(torch.nn.ReLU())
             self.learn_modules.append(torch.nn.Dropout())
         for _ in range(self.args['link_hidden_layers']-1):
-            self.learn_modules.append(torch.nn.Conv2d(input_size, hidden_size, 1))
+            self.learn_modules.append(torch.nn.Conv2d(input_size, hidden_size, 1)) # input channels: input_size, decides channel of filter
+                                                                                   # output_channels: output_size, decides number of filter used
+                                                                                   # kernel_size: decides filter size used
             self.learn_modules.append(torch.nn.ReLU())
             # self.learn_modules.append(torch.nn.Dropout())
             # self.learn_modules.append(torch.nn.BatchNorm2d(hidden_size))

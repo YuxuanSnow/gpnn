@@ -39,6 +39,7 @@ def main(args):
         model = roi_feature_model.Densenet(num_classes=len(metadata.action_classes))
     input_imsize = (224, 224)
 
+    # parallel data
     if not args.distributed:
         if args.feature_type.startswith('alexnet') or args.feature_type.startswith('vgg'):
             model.features = torch.nn.DataParallel(model.features)
@@ -69,13 +70,15 @@ def main(args):
 
     torch.backends.cudnn.benchmark = True
 
-    # Data loading code
+    # Data transformation
     normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                                  std=[0.229, 0.224, 0.225])
     transform = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
         normalize,
     ])
+
+    # Data loading code
     train_dataset = roi_feature_model.HICO(args.data, input_imsize, transform, 'train')
     #val_dataset = roi_feature_model.HICO(args.data, input_imsize, transform, 'val')
     test_dataset = roi_feature_model.HICO(args.data, input_imsize, transform, 'test')
