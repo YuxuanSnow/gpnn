@@ -25,13 +25,15 @@ class LinkFunction(torch.nn.Module):
         return self.l_function(edge_features)
 
     def __set_link(self, link_def, args):
-        self.l_definition = link_def.lower()
+        self.l_definition = link_def.lower()    # set input to lowercase
         self.args = args
 
         self.l_function = {
             'graphconv':        self.l_graph_conv,
             'graphconvlstm':    self.l_graph_conv_lstm,
         }.get(self.l_definition, None)
+
+        # self.l_function = self.l_graph_conv
 
         if self.l_function is None:
             print('WARNING!: Update Function has not been set correctly\n\tIncorrect definition ' + link_def)
@@ -41,6 +43,8 @@ class LinkFunction(torch.nn.Module):
             'graphconv':        self.init_graph_conv,
             'graphconvlstm':    self.init_graph_conv_lstm,
         }.get(self.l_definition, lambda x: (torch.nn.ParameterList([]), torch.nn.ModuleList([]), {}))
+
+        # init_parameters = self.init_graph_conv()
 
         init_parameters()
 
@@ -53,11 +57,13 @@ class LinkFunction(torch.nn.Module):
     # Definition of linking functions
     # GraphConv
     def l_graph_conv(self, edge_features):
+        # input is edge_features, send it into learn_modules
         last_layer_output = edge_features
         for layer in self.learn_modules:
             # use initially built neural network
             last_layer_output = layer(last_layer_output)
         return last_layer_output[:, 0, :, :]
+
 
     def init_graph_conv(self):
         input_size = self.args['edge_feature_size']
@@ -67,7 +73,8 @@ class LinkFunction(torch.nn.Module):
         if self.args.get('link_relu', False):
             self.learn_modules.append(torch.nn.ReLU())
             self.learn_modules.append(torch.nn.Dropout())
-        for _ in range(self.args['link_hidden_layers']-1):
+
+        for _ in range(self.args['link_hidden_layers']-1):                         # append n conv operation
             self.learn_modules.append(torch.nn.Conv2d(input_size, hidden_size, 1)) # input channels: input_size, decides channel of filter
                                                                                    # output_channels: output_size, decides number of filter used
                                                                                    # kernel_size: decides filter size used
@@ -76,7 +83,7 @@ class LinkFunction(torch.nn.Module):
             # self.learn_modules.append(torch.nn.BatchNorm2d(hidden_size))
             input_size = hidden_size
 
-        self.learn_modules.append(torch.nn.Conv2d(input_size, 1, 1))
+        self.learn_modules.append(torch.nn.Conv2d(input_size, 1, 1))               # map channel to 1, in order to have a matrix
         # self.learn_modules.append(torch.nn.Sigmoid())
 
     # GraphConvLSTM

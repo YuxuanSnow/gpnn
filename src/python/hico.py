@@ -114,9 +114,10 @@ def main(args):
     # Get data size and define model
     edge_features, node_features, adj_mat, node_labels, sequence_id, det_classes, det_boxes, human_num, obj_num = training_set[0]
 
-    edge_feature_size, node_feature_size = edge_features.shape[2], node_features.shape[1]
-    # why 2 and 1?
+    edge_feature_size, node_feature_size = edge_features.shape[2], node_features.shape[1]   # edge_feature_size = 200, node_feature_size = 298
+
     message_size = int(edge_feature_size/2)*2   # largest evennumber less than edge_feature_size
+
     model_args = {'model_path': args.resume, 'edge_feature_size': edge_feature_size, 'node_feature_size': node_feature_size, 'message_size': message_size, 'link_hidden_size': 512, 'link_hidden_layers': 2, 'link_relu': False, 'update_hidden_layers': 1, 'update_dropout': False, 'update_bias': True, 'propagate_layers': 3, 'hoi_classes': action_class_num, 'resize_feature_to_message_size': False}
     model = models.GPNN_HICO(model_args) # construct GPNN structure for hico dataset
     del edge_features, node_features, adj_mat, node_labels

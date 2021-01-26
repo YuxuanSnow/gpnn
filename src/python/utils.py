@@ -186,10 +186,10 @@ def get_hico_data(args):
     with open(os.path.join(args.tmp_root, 'hico', 'test.txt')) as f:
         test_filenames = [line.strip() for line in f.readlines()]
     with open(os.path.join(args.tmp_root, 'hico', 'img_index.txt')) as f:
-        img_index = [line.strip() for line in f.readlines()]
+        img_index = [line.strip() for line in f.readlines()]                    # a list containing all image index
 
-    root = os.path.join(args.data_root, 'processed', 'hico_data_background_49')
-    training_set = datasets.HICO(root, train_filenames[:])
+    root = os.path.join(args.data_root, 'processed', 'hico_data_background_49') # folder containing extracted edge, nodes and groundtruth information
+    training_set = datasets.HICO(root, train_filenames[:])                      # a list containing edge_features, node_features, adj_mat, node_labels, sequence_id, det_classes, det_boxes, human_num, obj_num
     valid_set = datasets.HICO(root, val_filenames[:])
     testing_set = datasets.HICO(root, test_filenames[:])
 

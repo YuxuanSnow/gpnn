@@ -68,8 +68,8 @@ class GPNN_HICO(torch.nn.Module):
         # pred_node_labels = torch.autograd.Variable(torch.zeros(node_labels.size()))
         # if args.cuda:
         #     pred_node_labels = pred_node_labels.cuda()
-        pred_adj_mat = torch.autograd.Variable(torch.zeros(adj_mat.size()))         #automatic differentiation of arbitrary scalar valued functions
-        pred_node_labels = torch.autograd.Variable(torch.zeros(node_labels.size()))
+        pred_adj_mat = torch.autograd.Variable(torch.zeros(adj_mat.size()))                #automatic differentiation of arbitrary scalar valued functions
+        pred_node_labels = torch.autograd.Variable(torch.zeros(node_labels.size()))        # Place holder for final prediction
         if args.cuda:
             pred_node_labels = pred_node_labels.cuda()
             pred_adj_mat = pred_adj_mat.cuda()
@@ -114,9 +114,12 @@ class GPNN_HICO(torch.nn.Module):
 
             for passing_round in range(self.propagate_layers):      # iterative passing
                 # print hidden_edge_states[batch_idx][passing_round].size(), valid_node_num
+                # build the adjacency matrix: each element is (edge feature --link_function--> number between [0,1], describes how important is the edge)
                 pred_adj_mat[batch_idx, :valid_node_num, :valid_node_num] = self.link_fun(hidden_edge_states[batch_idx][passing_round][:, :, :valid_node_num, :valid_node_num])
+
                 #if passing_round == 0:
                     #sigmoid_pred_adj_mat = torch.autograd.Variable(torch.ones(adj_mat[batch_idx, :, :].unsqueeze(0).size())).cuda()  # Test constant graph
+
                 sigmoid_pred_adj_mat = self.sigmoid(pred_adj_mat[batch_idx, :, :]).unsqueeze(0)
 
                 # Loop through nodes
@@ -125,19 +128,19 @@ class GPNN_HICO(torch.nn.Module):
                     # h_w = node_features
                     h_v = hidden_node_states[batch_idx][passing_round][:, :, i_node]
                     h_w = hidden_node_states[batch_idx][passing_round][:, :, :valid_node_num]
-                    e_vw = edge_features[batch_idx, :, i_node, :valid_node_num].unsqueeze(0)
+                    e_vw = edge_features[batch_idx, :, i_node, :valid_node_num].unsqueeze(0)        # edges connected to current node
                     m_v = self.message_fun(h_v, h_w, e_vw, args)
 
                     # Sum up messages from different nodes according to weights
-                    m_v = sigmoid_pred_adj_mat[:, i_node, :valid_node_num].unsqueeze(1).expand_as(m_v) * m_v
-                    hidden_edge_states[batch_idx][passing_round+1][:, :, :valid_node_num, i_node] = m_v
-                    m_v = torch.sum(m_v, 2)
-                    h_v = self.update_fun(h_v[None].contiguous(), m_v[None])
+                    m_v = sigmoid_pred_adj_mat[:, i_node, :valid_node_num].unsqueeze(1).expand_as(m_v) * m_v    # expand the Ajacency matrix size to message size, apply weights to message
+                    hidden_edge_states[batch_idx][passing_round+1][:, :, :valid_node_num, i_node] = m_v         # this message is saved as hidden edge
+                    m_v = torch.sum(m_v, 2)         # sum up message of node v over dimension 2: sum up all message coming to v
+                    h_v = self.update_fun(h_v[None].contiguous(), m_v[None])        # put the previous hidden state of node and summed message coming to node into GRU
                     # print 'h_v', h_v.size()
 
                     # Readout at the final round of message passing
                     if passing_round == self.propagate_layers-1:
-                        pred_node_labels[batch_idx, i_node, :] = self.readout_fun(h_v.squeeze(0))
+                        pred_node_labels[batch_idx, i_node, :] = self.readout_fun(h_v.squeeze(0))   # using fc layers to map it to 117 classes, they are one-hot encoding predicted action for each node
 
         return pred_adj_mat, pred_node_labels
 
